@@ -5,14 +5,14 @@
 #define WALL "\u2588"
 
 struct Player {
-  int x, y;
+  int x, y, score;
   bool hasKey;
   char sprite;
 } player;
 
 void loadMap();
 void movePlayer(char ch);
-void check(int *x, int *y, int i, int j);
+void checkCollision(int *x, int *y, int i, int j);
 
 int score=0;
 int m=0;
@@ -42,7 +42,7 @@ int main() {
   return 0;
 }
 
-void check(int *x, int *y, int i, int j) {
+void checkCollision(int *x, int *y, int i, int j) {
 
   if(map[*y+i][*x+j] != '#') {
     map[*y][*x]=' ';  // current position set to blank after sprite moves
@@ -56,7 +56,7 @@ void check(int *x, int *y, int i, int j) {
     
     if (map[*y][*x] == 'K') {
       m++;  // increment map number (goto next map)
-      loadMap();
+      loadMap();  // load next map
     }
   }
 
@@ -75,7 +75,7 @@ void movePlayer(char ch) {
     i=0, j=1;
   }
 
-  check(&player.y, &player.x, i, j);  // i is CHANGE in y coordinate, j is CHANGE in x coordinate
+  checkCollision(&player.y, &player.x, i, j);  // i is CHANGE in y coordinate, j is CHANGE in x coordinate
 }
 
 void loadMap() {
