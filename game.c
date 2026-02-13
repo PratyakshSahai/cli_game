@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <conio.h>
 #define WALL "\u2588"
 
-typedef struct Player {
+typedef struct {
   int x, y, score;
   bool hasKey;
   char sprite;
@@ -21,7 +22,6 @@ char map[13][21]={0};
 
 int main() {
   Player player;
-  loadMap();
 
   player.x=1;
   player.y=1;
@@ -29,20 +29,29 @@ int main() {
   player.score=0;
   
   char ch = '\0';
+  loadMap();
 
-  (ch = tolower(getch())) != 'q';
+  while ((ch = tolower(getch())) != 'q') {
     movePlayer(&player, ch);
+    renderMap();
+  }
 
+  return 0;
+}
 
-  printf("\n");
+void renderMap() {
+
+  system("cls");
+
+  printf("MAP %d\n", m+1);
+
   for (int i=0; i<13; i++) {
     for (int j=0; j<21; j++) {
       printf("%c", map[i][j]);
     }
     printf("\n");
   }
-
-  return 0;
+  
 }
 
 void checkCollision(Player *player, int i, int j) {
@@ -85,6 +94,8 @@ void movePlayer(Player *player, char ch) {
 }
 
 void loadMap() {
+
+  system("cls");
 
   printf("MAP %d\n", m+1);
 
