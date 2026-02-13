@@ -11,10 +11,10 @@ typedef struct Player {
 } Player;
 
 void loadMap();
+void renderMap();
 void movePlayer(Player *player, char ch);
 void checkCollision(Player *player, int i, int j);
 
-int score=0;
 int m=0;
 char map_list[10][10] = {"map1.map", "map2.map", "map3.map", "map4.map", "map5.map", "map6.map", "map7.map", "map8.map", "map9.map", "map10.map"};
 char map[13][21]={0};
@@ -26,6 +26,7 @@ int main() {
   player.x=1;
   player.y=1;
   player.sprite='@';
+  player.score=0;
   
   char ch = '\0';
 
@@ -55,7 +56,7 @@ void checkCollision(Player *player, int i, int j) {
     *y+=i;
 
     if (map[*y][*x] == 'T')
-      score++;  // treasure obtained
+      player->score++;  // treasure obtained
 
     map[*y][*x]=player->sprite;
     
