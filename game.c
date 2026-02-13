@@ -12,6 +12,7 @@ struct Player {
 
 void loadMap();
 void movePlayer(char ch);
+void check(int *x, int *y, int i, int j);
 
 int score=0;
 int m=0;
@@ -29,6 +30,8 @@ int main() {
   (ch = tolower(getch())) != 'q';
     movePlayer(ch);
 
+
+  printf("\n");
   for (int i=0; i<13; i++) {
     for (int j=0; j<21; j++) {
       printf("%c", map[i][j]);
@@ -39,16 +42,24 @@ int main() {
   return 0;
 }
 
-void check(int x, int y) {
-  if (map[y][x] == 'T') {
-    score++;
-    map[y][x] = ' ';
+void check(int *x, int *y, int i, int j) {
+
+  if(map[*y+i][*x+j] != '#') {
+    map[*y][*x]=' ';  // current position set to blank after sprite moves
+    *x+=j;
+    *y+=i;
+
+    if (map[*y][*x] == 'T')
+      score++;  // treasure obtained
+
+    map[*y][*x]=player.sprite;
+    
+    if (map[*y][*x] == 'K') {
+      m++;  // increment map number (goto next map)
+      loadMap();
+    }
   }
 
-  if (map[y][x] == 'K') {
-    m++;
-    loadMap();
-  }
 }
 
 void movePlayer(char ch) {
@@ -64,15 +75,7 @@ void movePlayer(char ch) {
     i=0, j=1;
   }
 
-  check(player.y+i, player.x+j);
-
-  if(map[player.y+i][player.x+j] != '#') {
-    map[player.y][player.x]=' ';
-    player.x+=j;
-    player.y+=i;
-    map[player.y][player.x]=player.sprite;
-  }
-
+  check(&player.y, &player.x, i, j);  // i is CHANGE in y coordinate, j is CHANGE in x coordinate
 }
 
 void loadMap() {
