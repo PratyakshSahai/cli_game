@@ -4,15 +4,15 @@
 #include <conio.h>
 #define WALL "\u2588"
 
-struct Player {
+typedef struct Player {
   int x, y, score;
   bool hasKey;
   char sprite;
-} player;
+} Player;
 
 void loadMap();
-void movePlayer(char ch);
-void checkCollision(int *x, int *y, int i, int j);
+void movePlayer(Player *player, char ch);
+void checkCollision(Player *player, int i, int j);
 
 int score=0;
 int m=0;
@@ -20,6 +20,7 @@ char map_list[10][10] = {"map1.map", "map2.map", "map3.map", "map4.map", "map5.m
 char map[13][21]={0};
 
 int main() {
+  Player player;
   loadMap();
 
   char ch = '\0';
@@ -28,7 +29,7 @@ int main() {
   player.y=1;
   
   (ch = tolower(getch())) != 'q';
-    movePlayer(ch);
+    movePlayer(&player, ch);
 
 
   printf("\n");
@@ -42,7 +43,10 @@ int main() {
   return 0;
 }
 
-void checkCollision(int *x, int *y, int i, int j) {
+void checkCollision(Player *player, int i, int j) {
+
+  int *x = &player->x;
+  int *y = &player->y;
 
   if(map[*y+i][*x+j] != '#') {
     map[*y][*x]=' ';  // current position set to blank after sprite moves
@@ -52,7 +56,7 @@ void checkCollision(int *x, int *y, int i, int j) {
     if (map[*y][*x] == 'T')
       score++;  // treasure obtained
 
-    map[*y][*x]=player.sprite;
+    map[*y][*x]=player->sprite;
     
     if (map[*y][*x] == 'K') {
       m++;  // increment map number (goto next map)
@@ -62,7 +66,7 @@ void checkCollision(int *x, int *y, int i, int j) {
 
 }
 
-void movePlayer(char ch) {
+void movePlayer(Player *player, char ch) {
 
   int i=0,j=0;
   if (ch == 'w') {
@@ -75,7 +79,7 @@ void movePlayer(char ch) {
     i=0, j=1;
   }
 
-  checkCollision(&player.y, &player.x, i, j);  // i is CHANGE in y coordinate, j is CHANGE in x coordinate
+  checkCollision(player, i, j);  // i is CHANGE in y coordinate, j is CHANGE in x coordinate
 }
 
 void loadMap() {
