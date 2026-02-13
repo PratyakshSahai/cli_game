@@ -23,11 +23,12 @@ int main() {
   Player player;
   loadMap();
 
+  player.x=1;
+  player.y=1;
+  player.sprite='@';
+  
   char ch = '\0';
 
-  player.x=0;
-  player.y=1;
-  
   (ch = tolower(getch())) != 'q';
     movePlayer(&player, ch);
 
