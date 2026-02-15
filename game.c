@@ -13,12 +13,12 @@
 
 typedef struct {
   int x, y, score;
-  bool hasKey;
+  bool hasTreasure;
   char sprite;
 } Player;
 
 void loadMap(Player *player);
-void renderMap();
+void renderMap(Player *player);
 void movePlayer(Player *player, char ch);
 void checkCollision(Player *player, int i, int j);
 
@@ -31,19 +31,20 @@ int main() {
 
   player.sprite='@';
   player.score=0;
+  player.hasTreasure=false;
   
   char ch = '\0';
   loadMap(&player);
 
   while ((ch = tolower(getch())) != 'q') {
     movePlayer(&player, ch);
-    renderMap();
+    renderMap(&player);
   }
 
   return 0;
 }
 
-void renderMap() {
+void renderMap(Player *player) {
 
   system("cls");  // clear screen
   printf("MAP %d\n", m+1);
@@ -55,11 +56,12 @@ void renderMap() {
           printf(WALL_BG);
           break;
         case '@':
-          // if (player->hasTreasure == true) {
-          //   printf(PLAYER_WITH_KEY);
-          //   break;
-          // }
-          printf(PLAYER_NO_KEY);
+          if (player->hasTreasure == true)
+            printf(PLAYER_WITH_KEY);
+          else if (player->hasTreasure == false)
+            printf(PLAYER_NO_KEY);
+          else
+            printf("@@");        
           break;
         case 'T':
           printf(TREASURE);
@@ -81,16 +83,25 @@ void checkCollision(Player *player, int i, int j) {
   int *x = &player->x;
   int *y = &player->y;
 
-  if(map[*y+i][*x+j] != '#') {
+  if ((map[*y+i][*x+j] == 'K' && player->hasTreasure == false)) {
+      printf("Collect " TREASURE " to proceed");
+      Sleep(700);
+  }
+  
+  else if (map[*y+i][*x+j] != '#') {
+
     map[*y][*x]=' ';  // current position set to blank after sprite moves
     *x+=j;
     *y+=i;
 
-    if (map[*y][*x] == 'T')
+    if (map[*y][*x] == 'T') {
+      player->hasTreasure=true;
       player->score++;  // treasure obtained
+    } 
     
-    if (map[*y][*x] == 'K') {
+    else if (map[*y][*x] == 'K' && player->hasTreasure == true) {
       m++;  // increment map number (goto next map)
+      player->hasTreasure = false;  // reset player state
       loadMap(player);  // load next map
     }
 
@@ -136,7 +147,7 @@ void loadMap(Player *player) {
 
   }
 
-  renderMap();
+  renderMap(player);
   player->x = player->y = 1;
 
 }
