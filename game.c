@@ -3,7 +3,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <conio.h>
-#define WALL "\u2588"
+#include <Windows.h>
+
+#define WALL_BG "\x1b[47m  \x1b[0m"
+#define KEY "\x1b[41m  \x1b[0m"
+#define TREASURE "\x1b[43m  \x1b[0m"
+#define PLAYER_WITH_KEY "\x1b[42m  \x1b[0m"
+#define PLAYER_NO_KEY "\x1b[44m  \x1b[0m"
 
 typedef struct {
   int x, y, score;
@@ -44,7 +50,26 @@ void renderMap() {
 
   for (int i=0; i<13; i++) {
     for (int j=0; j<21; j++) {
-      printf("%c", map[i][j]);
+      switch(map[i][j]) {
+        case '#':
+          printf(WALL_BG);
+          break;
+        case '@':
+          // if (player->hasTreasure == true) {
+          //   printf(PLAYER_WITH_KEY);
+          //   break;
+          // }
+          printf(PLAYER_NO_KEY);
+          break;
+        case 'T':
+          printf(TREASURE);
+          break;
+        case 'K':
+          printf(KEY);
+          break;
+        default:
+          printf("  ");
+      }
     }
     printf("\n");
   }
@@ -66,7 +91,6 @@ void checkCollision(Player *player, int i, int j) {
     
     if (map[*y][*x] == 'K') {
       m++;  // increment map number (goto next map)
-      printf("%d", m);
       loadMap(player);  // load next map
     }
 
