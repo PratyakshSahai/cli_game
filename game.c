@@ -93,11 +93,6 @@ void movePlayer(Player *player, char ch) {
 
 void loadMap(Player *player) {
 
-  system("cls");
-  player->x = player->y = 1;
-
-  printf("MAP %d\n", m+1);
-
   char ch='\0';
   FILE *file = fopen(map_list[m], "r"); // filename is map_list element
 
@@ -117,13 +112,8 @@ void loadMap(Player *player) {
 
   }
 
-  // printing the map
-  for (int i=0; i<13; i++) {
-    for (int j=0; j<21; j++) {
-      printf("%c", map[i][j]);
-    }
-    printf("\n");
-  }
+  renderMap();
+  player->x = player->y = 1;
 
 }
 
