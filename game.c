@@ -47,7 +47,7 @@ int main() {
 void renderMap(Player *player) {
 
   system("cls");  // clear screen
-  printf("MAP %d\n", m+1);
+  printf("\t\t\t\t\t  MAP %d\n\t\t\t\t\t  ", m+1);
 
   for (int i=0; i<13; i++) {
     for (int j=0; j<21; j++) {
@@ -73,7 +73,7 @@ void renderMap(Player *player) {
           printf("  ");
       }
     }
-    printf("\n");
+    printf("\n\t\t\t\t\t  ");
   }
   
 }
