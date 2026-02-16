@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <conio.h>
-#include <Windows.h>
 
 #define WALL_BG "\x1b[47m  \x1b[0m"
 #define KEY "\x1b[41m  \x1b[0m"
@@ -19,8 +18,8 @@ typedef struct {
 
 void loadMap(Player *player);
 void renderMap(Player *player);
-void movePlayer(Player *player, char ch);
-void checkCollision(Player *player, int i, int j);
+int movePlayer(Player *player, char ch);
+int checkCollision(Player *player, int i, int j);
 
 int m=0;  // index of map_list
 char map_list[10][10] = {"map1.map", "map2.map", "map3.map", "map4.map", "map5.map", "map6.map", "map7.map", "map8.map", "map9.map", "map10.map"};
@@ -37,8 +36,12 @@ int main() {
   loadMap(&player);
 
   while ((ch = tolower(getch())) != 'q') {
-    movePlayer(&player, ch);
+    if (movePlayer(&player, ch) == 0) {
+      renderMap(&player);
+      continue;
+    }
     renderMap(&player);
+    printf("Collect " TREASURE " to proceed\n\t\t\t\t\t  ");
   }
 
   return 0;
@@ -78,15 +81,13 @@ void renderMap(Player *player) {
   
 }
 
-void checkCollision(Player *player, int i, int j) {
+int checkCollision(Player *player, int i, int j) {
 
   int *x = &player->x;
   int *y = &player->y;
 
-  if ((map[*y+i][*x+j] == 'K' && player->hasTreasure == false)) {
-      printf("Collect " TREASURE " to proceed");
-      Sleep(700);
-  }
+  if ((map[*y+i][*x+j] == 'K' && player->hasTreasure == false))
+    return 1;
   
   else if (map[*y+i][*x+j] != '#') {
 
@@ -107,10 +108,10 @@ void checkCollision(Player *player, int i, int j) {
 
     map[*y][*x]=player->sprite;
   }
-
+  return 0;
 }
 
-void movePlayer(Player *player, char ch) {
+int movePlayer(Player *player, char ch) {
 
   int i=0,j=0;  // i is CHANGE in y coordinate, j is CHANGE in x coordinate
   if (ch == 'w') {
@@ -123,7 +124,7 @@ void movePlayer(Player *player, char ch) {
     i=0, j=1;
   }
 
-  checkCollision(player, i, j);
+  return checkCollision(player, i, j);
 }
 
 void loadMap(Player *player) {
