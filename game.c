@@ -9,7 +9,7 @@
 #define COLS 10 
 
 typedef struct {
-  int x, y, score;
+  int x, y, score, mapsCompleted;
   bool hasTreasure;
   char sprite;
 } Player;
@@ -28,6 +28,14 @@ void placeSpecialPoints();
 void saveMap(const char *filename);
 void generateMazeFile(const char *filename);
 
+// Start and End Menus
+int startMenu();
+int endMenu(const Player *player, const double gameTime);
+void DrawCenteredText(const char *text, int y, int fontSize, Color color);
+void DrawCenteredBox(int y, int w, int h, Color color, const char *text, int fontSize);
+void DrawKeyBox(const char *key, int x, int y);
+void DrawControls();
+
 // Map Rendering
 void loadMap(Player *player);
 void renderMap(Player *player);
@@ -36,22 +44,42 @@ void renderMap(Player *player);
 int movePlayer(Player *player, char ch);
 int checkCollision(Player *player, int i, int j);
 
+// Main Game Function
+int runGame();
+
 int m=0;  // index of map_list
 char map[13][21]={0};
 
 int main() {
+
+  while (runGame());
+  return 0;
+
+}
+
+int runGame() {
   Player player;
 
   player.sprite='@';
   player.score=0;
   player.hasTreasure=false;
+  player.mapsCompleted = 0;
 
   generateMazeFile("maze.map"); // Generate the maze file
 
   InitWindow(800, 600, "Game");
   SetTargetFPS(60);
+  SetExitKey(0);
   
+  // Start Menu
+  if (!startMenu()) {
+    CloseWindow();
+    return 0;
+  }
+
+  // Gameplay
   loadMap(&player);
+  double startTime = GetTime();
   int illegal;
   bool exitGame = false;
 
@@ -59,7 +87,6 @@ int main() {
 
     if (IsKeyPressed(KEY_Q)) {
       exitGame = true;
-      break;
     }
 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)) illegal = movePlayer(&player, 'w');
@@ -80,8 +107,135 @@ int main() {
     EndDrawing();
   }
 
+  double endTime = GetTime();
+
+  // End Menu
+  if (endMenu(&player, endTime - startTime)) return 1; // endMenu returns 1 when player clicks R to restart
+
   CloseWindow();
   
+  return 0;
+}
+
+void DrawCenteredText(const char *text, int y, int fontSize, Color color) {
+
+  int width = MeasureText(text, fontSize);
+  int x = (GetScreenWidth() - width) / 2;
+  DrawText(text, x, y, fontSize, color);
+
+}
+
+void DrawCenteredBox(int y, int w, int h, Color color, const char *text, int fontSize) {
+  int x = (GetScreenWidth() - w) / 2;
+
+  DrawRectangle(x, y, w, h, color);
+
+  int textWidth = MeasureText(text, fontSize);
+  DrawText(text,
+    x + (w - textWidth)/2,
+    y + (h - fontSize)/2,
+    fontSize,
+    WHITE
+  );
+}
+
+void DrawKeyBox(const char *key, int x, int y) {
+  int w = 40, h = 40;
+
+  // box
+  DrawRectangle(x, y, w, h, (Color){40, 40, 40, 255});
+  DrawRectangleLines(x, y, w, h, (Color){80, 80, 80, 255});
+
+  // center text inside box
+  int textWidth = MeasureText(key, 20);
+  DrawText(key,
+      x + (w - textWidth)/2,
+      y + (h - 20)/2,
+      20,
+      WHITE
+  );
+}
+
+void DrawControls() {
+  int centerX = GetScreenWidth() / 2;
+  int startY = GetScreenHeight() / 2 - 60;
+
+  int spacing = 10;
+  int size = 40;
+
+  DrawCenteredText(" OR",  startY + size + spacing + 10, 25, LIGHTGRAY);
+  DrawCenteredText("WASD or Arrow-Keys to move", startY + 120, 20, LIGHTGRAY);
+
+  // WASD (left side)
+  int leftX = centerX - 120;
+
+  DrawKeyBox("W", leftX + size + spacing - 50, startY);
+  DrawKeyBox("A", leftX - 50, startY + size + spacing);
+  DrawKeyBox("S", leftX + size + spacing - 50, startY + size + spacing);
+  DrawKeyBox("D", leftX + 2*(size + spacing) - 50, startY + size + spacing);
+
+  // Arrow keys (right side)
+  int rightX = centerX + 40;
+
+  DrawKeyBox("^", rightX + size + spacing, startY);
+  DrawKeyBox("<", rightX, startY + size + spacing);
+  DrawKeyBox("v", rightX + size + spacing, startY + size + spacing);
+  DrawKeyBox(">", rightX + 2*(size + spacing), startY + size + spacing);
+
+}
+
+int startMenu() {
+  while (!WindowShouldClose()) {
+
+    if (IsKeyPressed(KEY_ENTER)) return 1;
+    if (IsKeyPressed(KEY_Q)) return 0;
+
+    BeginDrawing();
+    ClearBackground((Color){25, 30, 35, 255});
+
+    int h = GetScreenHeight();
+
+    DrawCenteredText("MAZE GAME", h/4, 60, YELLOW);
+
+    DrawControls();
+
+    DrawCenteredText("Press ENTER to Start", h - 120, 20, LIGHTGRAY);
+    DrawCenteredText("Press Q to Quit", h - 80, 20, GRAY);
+
+    EndDrawing();
+  }
+  return 0;
+}
+
+int endMenu(const Player *player, const double gameTime) {
+  while (!WindowShouldClose()) {
+
+    if (IsKeyPressed(KEY_R)) return 1; // restart
+    if (IsKeyPressed(KEY_Q)) return 0; // quit
+
+    BeginDrawing();
+    ClearBackground((Color){25, 30, 35, 255});
+
+    int h = GetScreenHeight();
+
+    DrawCenteredText("CONGRATULATIONS!", h/5, 50, YELLOW);
+
+    int minutes = (int)(gameTime / 60);
+    int seconds = (int)gameTime % 60;
+
+    char timeText[50];
+    sprintf(timeText, "Time: %02d:%02d", minutes, seconds);
+    DrawCenteredBox(h/2 - 60, 200, 60, (Color){40,40,40,255}, timeText, 20);
+
+    char mapText[50];
+    sprintf(mapText, "Maps: %d", player->mapsCompleted);
+    DrawCenteredBox(h/2 + 20, 200, 60, (Color){60,60,60,255}, mapText, 20);
+
+    DrawCenteredText("Press R to Restart", h - 120, 20, LIGHTGRAY);
+    DrawCenteredText("Press Q to Quit", h - 80, 20, GRAY);
+
+    EndDrawing();
+  }
   return 0;
 }
 
@@ -144,6 +298,7 @@ int checkCollision(Player *player, int i, int j) {
     } 
     
     else if (map[*y][*x] == 'K' && player->hasTreasure == true) {
+      (player->mapsCompleted)++;
       m++;  // increment map number (goto next map)
       player->hasTreasure = false;  // reset player state
       loadMap(player);  // load next map
