@@ -30,6 +30,7 @@ void generateMazeFile(const char *filename);
 
 // Start and End Menus
 int startMenu();
+void rulesMenu();
 int endMenu(const Player *player, const double gameTime);
 void DrawCenteredText(const char *text, int y, int fontSize, Color color);
 void DrawCenteredBox(int y, int w, int h, Color color, const char *text, int fontSize);
@@ -52,9 +53,25 @@ char map[13][21]={0};
 
 int main() {
 
-  while (runGame());
-  return 0;
+  InitWindow(800, 600, "Game");
+  SetTargetFPS(60);
+  SetExitKey(0);
 
+  while (!WindowShouldClose()) {
+
+    int restart = runGame();
+
+    while (IsKeyDown(KEY_R) || IsKeyDown(KEY_Q)) {
+      BeginDrawing();
+      ClearBackground(BLACK);
+      EndDrawing();
+    }
+
+    if (!restart) break;
+  }
+
+  CloseWindow();
+  return 0;
 }
 
 int runGame() {
@@ -66,21 +83,25 @@ int runGame() {
   player.mapsCompleted = 0;
 
   generateMazeFile("maze.map"); // Generate the maze file
-
-  InitWindow(800, 600, "Game");
-  SetTargetFPS(60);
-  SetExitKey(0);
   
   // Start Menu
-  if (!startMenu()) {
-    CloseWindow();
-    return 0;
+  int choice;
+
+  while (1) {
+    choice = startMenu();
+
+    if (choice == 0) return 0;   // quit
+    if (choice == 2) {
+      rulesMenu();
+      continue;                 // back to menu
+    }
+    break;                      // start game
   }
 
   // Gameplay
   loadMap(&player);
   double startTime = GetTime();
-  int illegal;
+  int illegal = 0;
   bool exitGame = false;
 
   while (!WindowShouldClose() && !exitGame) {
@@ -100,7 +121,7 @@ int runGame() {
     renderMap(&player);
     
     if (illegal) {
-      DrawText("COLLECT ATLEAST ONE ", 200, 500, 25, WHITE);
+      DrawText("COLLECT AT LEAST ONE ", 200, 500, 25, WHITE);
       DrawRectangle(520, 495, 30, 30, YELLOW);
     }
 
@@ -110,11 +131,8 @@ int runGame() {
   double endTime = GetTime();
 
   // End Menu
-  if (endMenu(&player, endTime - startTime)) return 1; // endMenu returns 1 when player clicks R to restart
+  return endMenu(&player, endTime - startTime); // endMenu returns 1 when player clicks R to restart
 
-  CloseWindow();
-  
-  return 0;
 }
 
 void DrawCenteredText(const char *text, int y, int fontSize, Color color) {
@@ -188,6 +206,7 @@ int startMenu() {
   while (!WindowShouldClose()) {
 
     if (IsKeyPressed(KEY_ENTER)) return 1;
+    if (IsKeyPressed(KEY_R)) return 2;
     if (IsKeyPressed(KEY_Q)) return 0;
 
     BeginDrawing();
@@ -197,14 +216,56 @@ int startMenu() {
 
     DrawCenteredText("MAZE GAME", h/4, 60, YELLOW);
 
-    DrawControls();
-
-    DrawCenteredText("Press ENTER to Start", h - 120, 20, LIGHTGRAY);
-    DrawCenteredText("Press Q to Quit", h - 80, 20, GRAY);
+    DrawCenteredText("Press ENTER to Start", h - 280, 20, LIGHTGRAY);
+    DrawCenteredText("Press R for Rules", h - 250, 20, LIGHTGRAY);
+    DrawCenteredText("Press Q to Quit", h - 220, 20, GRAY);
 
     EndDrawing();
   }
   return 0;
+}
+
+void rulesMenu() {
+  while (!WindowShouldClose()) {
+
+    if (IsKeyPressed(KEY_B)) return;   // go back
+
+    BeginDrawing();
+    ClearBackground((Color){25, 30, 35, 255});
+
+    int h = GetScreenHeight();
+
+    DrawCenteredText("RULES", h/5, 50, YELLOW);
+
+    DrawControls();
+
+    const char *text1 = "Collect at least one treasure";
+    int y1 = h/3 + 230;
+
+    int textWidth1 = MeasureText(text1, 20);
+    int centerX = GetScreenWidth() / 2;
+
+    int textX1 = centerX - textWidth1/2 + 20;
+
+    DrawText(text1, textX1, y1, 20, LIGHTGRAY);
+
+    DrawRectangle(textX1 - 45, y1 - 5, 30, 30, YELLOW);
+
+    const char *text2 = "Reach the key to go to next map";
+    int y2 = h/3 + 280;
+
+    int textWidth2 = MeasureText(text2, 20);
+    int textX2 = centerX - textWidth2/2 + 20;
+
+    DrawText(text2, textX2, y2, 20, LIGHTGRAY);
+
+    // icon
+    DrawRectangle(textX2 - 45, y2 - 5, 30, 30, RED);
+
+    DrawCenteredText("Press B to go back", h - 70, 20, GRAY);
+
+    EndDrawing();
+  }
 }
 
 int endMenu(const Player *player, const double gameTime) {
