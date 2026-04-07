@@ -48,7 +48,6 @@ int checkCollision(Player *player, int i, int j);
 // Main Game Function
 int runGame();
 
-int m=0;  // index of map_list
 char map[13][21]={0};
 
 int main() {
@@ -81,8 +80,6 @@ int runGame() {
   player.score=0;
   player.hasTreasure=false;
   player.mapsCompleted = 0;
-
-  generateMazeFile("maze.map"); // Generate the maze file
   
   // Start Menu
   int choice;
@@ -360,7 +357,6 @@ int checkCollision(Player *player, int i, int j) {
     
     else if (map[*y][*x] == 'K' && player->hasTreasure == true) {
       (player->mapsCompleted)++;
-      m++;  // increment map number (goto next map)
       player->hasTreasure = false;  // reset player state
       loadMap(player);  // load next map
     }
@@ -387,6 +383,8 @@ int movePlayer(Player *player, char ch) {
 }
 
 void loadMap(Player *player) {
+
+  generateMazeFile("maze.map"); // Generate the maze file
 
   char ch='\0';
   FILE *file = fopen("maze.map", "r"); // filename is map_list element
