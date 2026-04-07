@@ -4,9 +4,7 @@
 #include <ctype.h>
 #include <time.h>
 #include "raylib.h"
-
-#define ROWS 6
-#define COLS 10 
+#define MAX 51
 
 typedef struct {
   int x, y, score, mapsCompleted;
@@ -19,6 +17,8 @@ typedef struct {
     int walls[4];
 } Cell;
 
+int ROWS=0;
+int COLS=0;
 // Random Maze Generation
 void initMaze();
 void shuffle(int *arr, int n);
@@ -26,7 +26,8 @@ void generateMaze(int x, int y);
 void buildGrid();
 void placeSpecialPoints();
 void saveMap(const char *filename);
-void generateMazeFile(const char *filename);
+void setupLevel(int level);
+void generateMazeFile(const char *filename,int level);
 
 // Start and End Menus
 int startMenu();
@@ -48,7 +49,7 @@ int checkCollision(Player *player, int i, int j);
 // Main Game Function
 int runGame();
 
-char map[13][21]={0};
+char map[MAX][MAX]={0};
 
 int main() {
 
@@ -301,8 +302,8 @@ void renderMap(Player *player) {
 
   int tileSize = 30;
 
-  for (int i=0; i<13; i++) {
-    for (int j=0; j<21; j++) {
+  for (int i=0; i<ROWS*2+1; i++) {
+    for (int j=0; j<COLS*2+1; j++) {
 
       int x = j*tileSize + 85;
       int y = i*tileSize + 80;
@@ -384,10 +385,10 @@ int movePlayer(Player *player, char ch) {
 
 void loadMap(Player *player) {
 
-  generateMazeFile("maze.map"); // Generate the maze file
+  generateMazeFile("maze.map",player->mapsCompleted); // Generate the maze file
 
   char ch='\0';
-  FILE *file = fopen("maze.map", "r"); // filename is map_list element
+  FILE *file = fopen("maze.map", "r");
 
   int i=0, j=0;
   while ((ch = fgetc(file)) != EOF) {
@@ -398,7 +399,7 @@ void loadMap(Player *player) {
     map[i][j]=ch; // store each character read from file into 'map' matrix
     j++;
 
-    if (j==21) {
+    if (j==COLS*2+1) {
       i++;
       j=0;
     }
@@ -411,8 +412,8 @@ void loadMap(Player *player) {
 }
 
 //Maze generator
-Cell maze[ROWS][COLS];
-char grid[ROWS * 2 + 1][COLS * 2 + 1];
+Cell maze[25][25];
+char grid[MAX][MAX];
 
 int dx[4] = {-1, 0, 1, 0};
 int dy[4] = {0, 1, 0, -1};
@@ -465,11 +466,11 @@ void generateMaze(int x, int y) {
 }
 
 void buildGrid() {
-    int rows = ROWS * 2 + 1;
-    int cols = COLS * 2 + 1;
+    int row = ROWS * 2 + 1;
+    int col = COLS * 2 + 1;
 
-    for (int i = 0; i < rows; i++)
-        for (int j = 0; j < cols; j++)
+    for (int i = 0; i < row; i++)
+        for (int j = 0; j < col; j++)
             grid[i][j] = '#';
 
     for (int i = 0; i < ROWS; i++) {
@@ -488,20 +489,20 @@ void buildGrid() {
 }
 
 void placeSpecialPoints() {
-    int rows = ROWS * 2 + 1;
-    int cols = COLS * 2 + 1;
+    int row = ROWS * 2 + 1;
+    int col = COLS * 2 + 1;
 
     sx = 1;
     sy = 1;
 
-    ex = rows - 2;
-    ey = cols - 2;
+    ex = row - 2;
+    ey = col - 2;
 
     int count = 0;
     // Treasure 1
   while (1) {
-      int x = rand() % rows;
-      int y = rand() % cols;
+      int x = rand() % row;
+      int y = rand() % col;
 
       if (grid[x][y] == ' ' &&
           !(x == sx && y == sy) &&
@@ -514,8 +515,8 @@ void placeSpecialPoints() {
 
   // Treasure 2
   while (1) {
-      int x = rand() % rows;
-      int y = rand() % cols;
+      int x = rand() % row;
+      int y = rand() % col;
 
       if (grid[x][y] == ' ' &&
           !(x == sx && y == sy) &&
@@ -529,8 +530,8 @@ void placeSpecialPoints() {
 
   // Treasure 3
   while (1) {
-      int x = rand() % rows;
-      int y = rand() % cols;
+      int x = rand() % row;
+      int y = rand() % col;
 
       if (grid[x][y] == ' ' &&
           !(x == sx && y == sy) &&
@@ -548,12 +549,12 @@ void saveMap(const char *filename) {
     FILE *fp = fopen(filename, "w");
     if (!fp) return;
 
-    int rows = ROWS * 2 + 1;
-    int cols = COLS * 2 + 1;
+    int row = ROWS * 2 + 1;
+    int col = COLS * 2 + 1;
 
 
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col; j++) {
 
             if (i == sx && j == sy)
               fputc('@', fp);
@@ -572,11 +573,22 @@ void saveMap(const char *filename) {
     fclose(fp);
 }
 
-void generateMazeFile(const char *filename) {
-    srand(time(NULL));
+void setupLevel(int level) {
+    int base = 7;
 
+    ROWS = base +  level/ 2;
+    COLS = base + level / 2;
+    if (ROWS > 25)
+      ROWS = 25;
+    if (COLS > 25) 
+      COLS = 25;    
+}
+
+void generateMazeFile(const char *filename,int level) {
+    srand(time(NULL));
+    setupLevel(level);
     initMaze();
-    generateMaze(0, 0);
+    generateMaze(0,0);  
     buildGrid();
     placeSpecialPoints();
     saveMap(filename);
