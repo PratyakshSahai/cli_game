@@ -578,10 +578,10 @@ void setupLevel(int level) {
 
     ROWS = base +  level/ 2;
     COLS = base + level / 2;
-    if (ROWS > 25)
-      ROWS = 25;
-    if (COLS > 25) 
-      COLS = 25;    
+    if (ROWS > (MAX-1)/2)
+      ROWS = (MAX-1)/2;
+    if (COLS > (MAX-1)/2) 
+      COLS = (MAX-1)/2;    
 }
 
 void generateMazeFile(const char *filename,int level) {
