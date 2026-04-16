@@ -59,6 +59,9 @@ int main() {
 
   while (!WindowShouldClose()) {
 
+    // [CHANGE 1] Toggle fullscreen with F key (works from any screen)
+    if (IsKeyPressed(KEY_F)) ToggleFullscreen();
+
     int restart = runGame();
 
     while (IsKeyDown(KEY_R) || IsKeyDown(KEY_Q)) {
@@ -108,6 +111,9 @@ int runGame() {
       exitGame = true;
     }
 
+    // [CHANGE 1] Toggle fullscreen with F key during gameplay
+    if (IsKeyPressed(KEY_F)) ToggleFullscreen();
+
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)) illegal = movePlayer(&player, 'w');
     if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT)) illegal = movePlayer(&player, 'a');
     if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN)) illegal = movePlayer(&player, 's');
@@ -119,7 +125,7 @@ int runGame() {
     renderMap(&player);
     
     if (illegal) {
-      DrawText("COLLECT AT LEAST ONE ", 200, 500, 25, WHITE);
+      DrawText("COLLECT AT LEAST ONE ", 200, 500, 25, YELLOW);
       DrawRectangle(520, 495, 30, 30, YELLOW);
     }
 
@@ -206,6 +212,8 @@ int startMenu() {
     if (IsKeyPressed(KEY_ENTER)) return 1;
     if (IsKeyPressed(KEY_R)) return 2;
     if (IsKeyPressed(KEY_Q)) return 0;
+    // [CHANGE 1] Toggle fullscreen with F key in start menu
+    if (IsKeyPressed(KEY_F)) ToggleFullscreen();
 
     BeginDrawing();
     ClearBackground((Color){25, 30, 35, 255});
@@ -217,6 +225,8 @@ int startMenu() {
     DrawCenteredText("Press ENTER to Start", h - 280, 20, LIGHTGRAY);
     DrawCenteredText("Press R for Rules", h - 250, 20, LIGHTGRAY);
     DrawCenteredText("Press Q to Quit", h - 220, 20, GRAY);
+    // [CHANGE 1] Hint for fullscreen toggle
+    DrawCenteredText("Press F to toggle Fullscreen", h - 185, 16, (Color){80, 80, 80, 255});
 
     EndDrawing();
   }
@@ -227,6 +237,8 @@ void rulesMenu() {
   while (!WindowShouldClose()) {
 
     if (IsKeyPressed(KEY_B)) return;   // go back
+    // [CHANGE 1] Toggle fullscreen with F key in rules menu
+    if (IsKeyPressed(KEY_F)) ToggleFullscreen();
 
     BeginDrawing();
     ClearBackground((Color){25, 30, 35, 255});
@@ -271,6 +283,8 @@ int endMenu(const Player *player, const double gameTime) {
 
     if (IsKeyPressed(KEY_R)) return 1; // restart
     if (IsKeyPressed(KEY_Q)) return 0; // quit
+    // [CHANGE 1] Toggle fullscreen with F key in end menu
+    if (IsKeyPressed(KEY_F)) ToggleFullscreen();
 
     BeginDrawing();
     ClearBackground((Color){25, 30, 35, 255});
@@ -300,13 +314,40 @@ int endMenu(const Player *player, const double gameTime) {
 
 void renderMap(Player *player) {
 
-  int tileSize = 30;
+  // [CHANGE 2] Compute tile size dynamically so the maze fits and stays centered
+  int screenW = GetScreenWidth();
+  int screenH = GetScreenHeight();
 
-  for (int i=0; i<ROWS*2+1; i++) {
-    for (int j=0; j<COLS*2+1; j++) {
+  int mazeCols = COLS * 2 + 1;
+  int mazeRows = ROWS * 2 + 1;
 
-      int x = j*tileSize + 85;
-      int y = i*tileSize + 80;
+  // Reserve 60px at top for "Map X" label and 20px bottom margin
+  int maxTileW = (screenW - 40) / mazeCols;
+  int maxTileH = (screenH - 80) / mazeRows;
+  int tileSize  = (maxTileW < maxTileH) ? maxTileW : maxTileH;
+  if (tileSize < 4) tileSize = 4;
+
+  // Center the maze horizontally; push it down slightly to leave room for the label
+  int offsetX = (screenW - mazeCols * tileSize) / 2;
+  int offsetY = (screenH - mazeRows * tileSize) / 2 + 20;
+
+  // [CHANGE 3] Draw "Map X" centered above the maze
+  char mapLabel[32];
+  sprintf(mapLabel, "Map %d", player->mapsCompleted + 1);
+  int labelFontSize = (tileSize > 12) ? 24 : 14;
+  int labelWidth    = MeasureText(mapLabel, labelFontSize);
+  DrawText(mapLabel,
+           (screenW - labelWidth) / 2,
+           offsetY - labelFontSize - 6,
+           labelFontSize,
+           LIGHTGRAY);
+
+  for (int i = 0; i < mazeRows; i++) {
+    for (int j = 0; j < mazeCols; j++) {
+
+      // [CHANGE 2] Use computed offset instead of hardcoded 85 / 80
+      int x = j * tileSize + offsetX;
+      int y = i * tileSize + offsetY;
 
       switch(map[i][j]) {
 
