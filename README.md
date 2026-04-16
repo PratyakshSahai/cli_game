@@ -87,3 +87,16 @@ After the game ends, the following details are displayed:
 ---
 
 ### Step 2: Clone the Repository
+
+1. git clone https://github.com/PratyakshSahai/Maze-Game.git
+2. cd Maze-Game --- ### Step 3: Compile the Game Open a terminal in the project directory and run: 
+
+#### gcc game.c -o game -lraylib -lopengl32 -lgdi32 -lwinmm 
+
+Ensure that Raylib is properly installed and linked before compiling. 
+
+--- 
+
+### Step 4: Run the Game 
+
+./game.exe
