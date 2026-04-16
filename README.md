@@ -64,12 +64,6 @@ After the game ends, the following details are displayed:
 
 ---
 
-## Project Structure
-
-<img width="362" height="135" alt="image" src="https://github.com/user-attachments/assets/eb694f58-7fb7-4481-9576-bdeeb55090be" />
-
----
-
 ## Installation and Setup Guide
 
 ### Step 1: Install Raylib
@@ -88,15 +82,40 @@ After the game ends, the following details are displayed:
 
 ### Step 2: Clone the Repository
 
-1. git clone https://github.com/PratyakshSahai/Maze-Game.git
-2. cd Maze-Game --- ### Step 3: Compile the Game Open a terminal in the project directory and run: 
-
-#### gcc game.c -o game -lraylib -lopengl32 -lgdi32 -lwinmm 
-
-Ensure that Raylib is properly installed and linked before compiling. 
+git clone https://github.com/PratyakshSahai/Maze-Game.git
 
 --- 
 
-### Step 4: Run the Game 
+How the file structure should look-
 
+```text
+C:\
+├── raylib\
+└── projects\
+    ├── Maze-Game\
+    ├── Game2\
+    └── Game3\
+```
+---
+
+### Step 3: Compile the Game Open a terminal in the project directory and run: 
+
+1. Go to raylib\w64devkit and run the w64devkit.exe file
+2. In the opnened terminal type-
+
+```text
+cd C:/.../Maze-Game
+```
+to make the game directory the present working directory, type the absolute path after 'cd'
+
+```text
+gcc game.c -o game.exe -IC:/raylib/raylib/src -LC:/raylib/raylib/src -lraylib -lopengl32 -lgdi32 -lwinmm
+```
+to compile the game.c file
+
+4. Run the game. Type-
+
+```text
 ./game.exe
+```
+to run the executable file
