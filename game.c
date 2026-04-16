@@ -463,10 +463,9 @@ int sx, sy; // start
 int kx, ky; // key
 int ex, ey; // exit
 
-//Treasures
+//Treasures (2 total)
 int tx1, ty1;
 int tx2, ty2;
-int tx3, ty3;
 
 void initMaze() {
     for (int i = 0; i < ROWS; i++) {
@@ -529,6 +528,72 @@ void buildGrid() {
     }
 }
 
+// BFS from start (sx,sy) treating the key cell (ex,ey) as impassable.
+// Returns 1 if (tx,ty) can be reached without stepping on the key, 0 otherwise.
+int isReachableWithoutKey(int tx, int ty) {
+    int row = ROWS * 2 + 1;
+    int col = COLS * 2 + 1;
+
+    static int visited[MAX][MAX];
+    for (int i = 0; i < row; i++)
+        for (int j = 0; j < col; j++)
+            visited[i][j] = 0;
+
+    // Simple BFS with a flat queue
+    static int qx[MAX * MAX], qy[MAX * MAX];
+    int head = 0, tail = 0;
+
+    qx[tail] = sx; qy[tail] = sy; tail++;
+    visited[sx][sy] = 1;
+
+    int ddx[4] = {-1, 1,  0, 0};
+    int ddy[4] = { 0, 0, -1, 1};
+
+    while (head < tail) {
+        int cx = qx[head], cy = qy[head]; head++;
+
+        if (cx == tx && cy == ty) return 1;
+
+        for (int d = 0; d < 4; d++) {
+            int nx = cx + ddx[d];
+            int ny = cy + ddy[d];
+
+            if (nx < 0 || nx >= row || ny < 0 || ny >= col) continue;
+            if (visited[nx][ny]) continue;
+            if (grid[nx][ny] == '#') continue;
+            if (nx == ex && ny == ey) continue; // key is treated as a wall
+
+            visited[nx][ny] = 1;
+            qx[tail] = nx; qy[tail] = ny; tail++;
+        }
+    }
+    return 0; // not reachable without passing through key
+}
+
+// Knocks down random interior walls to create loops / multiple routes.
+void addExtraPaths(int numExtra) {
+    int added = 0;
+    int maxAttempts = numExtra * 60;
+
+    for (int attempt = 0; attempt < maxAttempts && added < numExtra; attempt++) {
+        int type = rand() % 2;
+
+        if (type == 0 && ROWS > 1) {
+            int i  = rand() % (ROWS - 1);
+            int j  = rand() % COLS;
+            int gx = i * 2 + 2;
+            int gy = j * 2 + 1;
+            if (grid[gx][gy] == '#') { grid[gx][gy] = ' '; added++; }
+        } else if (COLS > 1) {
+            int i  = rand() % ROWS;
+            int j  = rand() % (COLS - 1);
+            int gx = i * 2 + 1;
+            int gy = j * 2 + 2;
+            if (grid[gx][gy] == '#') { grid[gx][gy] = ' '; added++; }
+        }
+    }
+}
+
 void placeSpecialPoints() {
     int row = ROWS * 2 + 1;
     int col = COLS * 2 + 1;
@@ -539,51 +604,37 @@ void placeSpecialPoints() {
     ex = row - 2;
     ey = col - 2;
 
-    int count = 0;
-    // Treasure 1
-  while (1) {
-      int x = rand() % row;
-      int y = rand() % col;
+    // Treasure 1 — must be reachable from start without crossing the key
+    while (1) {
+        int x = rand() % row;
+        int y = rand() % col;
 
-      if (grid[x][y] == ' ' &&
-          !(x == sx && y == sy) &&
-          !(x == ex && y == ey)) {
-          tx1 = x;
-          ty1 = y;
-          break;
-      }
-  }
+        if (grid[x][y] == ' ' &&
+            !(x == sx && y == sy) &&
+            !(x == ex && y == ey) &&
+            isReachableWithoutKey(x, y)) {
+            tx1 = x;
+            ty1 = y;
+            break;
+        }
+    }
 
-  // Treasure 2
-  while (1) {
-      int x = rand() % row;
-      int y = rand() % col;
+    // Treasure 2 — same constraint, and must differ from treasure 1
+    while (1) {
+        int x = rand() % row;
+        int y = rand() % col;
 
-      if (grid[x][y] == ' ' &&
-          !(x == sx && y == sy) &&
-          !(x == ex && y == ey) &&
-          !(x == tx1 && y == ty1)) {
-          tx2 = x;
-          ty2 = y;
-          break;
-      }
-  }
+        if (grid[x][y] == ' ' &&
+            !(x == sx && y == sy) &&
+            !(x == ex && y == ey) &&
+            !(x == tx1 && y == ty1) &&
+            isReachableWithoutKey(x, y)) {
+            tx2 = x;
+            ty2 = y;
+            break;
+        }
+    }
 
-  // Treasure 3
-  while (1) {
-      int x = rand() % row;
-      int y = rand() % col;
-
-      if (grid[x][y] == ' ' &&
-          !(x == sx && y == sy) &&
-          !(x == ex && y == ey) &&
-          !(x == tx1 && y == ty1) &&
-          !(x == tx2 && y == ty2)) {
-          tx3 = x;
-          ty3 = y;
-          break;
-      }
-  }
 }
 
 void saveMap(const char *filename) {
@@ -600,8 +651,7 @@ void saveMap(const char *filename) {
             if (i == sx && j == sy)
               fputc('@', fp);
             else if ((i == tx1 && j == ty1) ||
-                     (i == tx2 && j == ty2) ||
-                     (i == tx3 && j == ty3))
+                     (i == tx2 && j == ty2))
                         fputc('T', fp);
             else if (i == ex && j == ey)
               fputc('K', fp);
@@ -615,7 +665,7 @@ void saveMap(const char *filename) {
 }
 
 void setupLevel(int level) {
-    int base = 7;
+    int base = 8;
 
     ROWS = base +  level/ 2;
     COLS = base + level / 2;
@@ -625,12 +675,15 @@ void setupLevel(int level) {
       COLS = (MAX-1)/2;    
 }
 
+
 void generateMazeFile(const char *filename,int level) {
     srand(time(NULL));
     setupLevel(level);
     initMaze();
     generateMaze(0,0);  
     buildGrid();
+    int extraPaths = (ROWS + COLS) / 2;
+    addExtraPaths(extraPaths);
     placeSpecialPoints();
     saveMap(filename);
 }
